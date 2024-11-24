@@ -4,22 +4,28 @@ import shutil
 class FileSegregator:
     def __init__(self, source_folder):
         self.source_folder = source_folder
+        self.validate_folder(self.source_folder)
+
+    @staticmethod
+    def validate_folder(folder_path):
+        """Ensure a folder exists and is accessible."""
+        if not os.path.exists(folder_path):
+            raise FileNotFoundError(f"Folder '{folder_path}' does not exist.")
+        if not os.path.isdir(folder_path):
+            raise NotADirectoryError(f"Path '{folder_path}' is not a directory.")
 
     def move_files(self, destination_folder, extensions):
-        # List all files in the source folder
-        files = os.listdir(self.source_folder)
+        """Move files with specific extensions to the destination folder."""
+        self.validate_folder(self.source_folder)
+        os.makedirs(destination_folder, exist_ok=True)
 
-        # Iterate through each file
-        for file_name in files:
-            # Check if the file ends with any of the specified extensions
-            if file_name.endswith(extensions):
-                # Create the destination folder if it doesn't exist
-                os.makedirs(destination_folder, exist_ok=True)
-
-                # Move the file to the destination folder
-                source_path = os.path.join(self.source_folder, file_name)
-                destination_path = os.path.join(destination_folder, file_name)
-                shutil.move(source_path, destination_path)
+        for entry in os.scandir(self.source_folder):
+            if entry.is_file() and entry.name.endswith(extensions):
+                try:
+                    shutil.move(entry.path, os.path.join(destination_folder, entry.name))
+                    print(f"Moved '{entry.name}' to '{destination_folder}'")
+                except Exception as e:
+                    print(f"Error moving '{entry.name}': {e}")
 
     def move_documents(self, destination_folder):
         self.move_files(destination_folder, (".txt", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".csv"))
@@ -39,35 +45,25 @@ class FileSegregator:
     def move_videos_and_tracks(self, destination_folder):
         self.move_files(destination_folder, (".mp3", ".mp4", ".avi", ".mov", ".flv", ".wmv", ".wav", ".m4a", ".ogg", ".flac"))
 
-# Define destination folders
-docs_destination_folder = r"C:\Users\user\Downloads\Documents"
-programs_destination_folder = r"C:\Users\user\Downloads\Programs"
-photos_destination_folder = r"C:\Users\user\Downloads\Photos"
-programming_docs_destination_folder = r"C:\Users\user\Downloads\Programming Documents"
-web_docs_destination_folder = r"C:\Users\user\Downloads\Web Documents"
-videos_and_tracks_destination_folder = r"C:\Users\user\Downloads\Videos and Songs"
-
-# Define source folder
+# Define source folder and destination folders
 source_folder = r"C:\Users\user\Downloads"
+
+docs_destination_folder = os.path.join(source_folder, "Documents")
+programs_destination_folder = os.path.join(source_folder, "Programs")
+photos_destination_folder = os.path.join(source_folder, "Photos")
+programming_docs_destination_folder = os.path.join(source_folder, "Programming Documents")
+web_docs_destination_folder = os.path.join(source_folder, "Web Documents")
+videos_and_tracks_destination_folder = os.path.join(source_folder, "Videos and Songs")
 
 # Instantiate the FileSegregator class
 file_segregator = FileSegregator(source_folder)
 
-# Move documents to the destination folder
+# Move files to their respective folders
 file_segregator.move_documents(docs_destination_folder)
-
-# Move programs to the destination folder
 file_segregator.move_programs(programs_destination_folder)
-
-# Move photos to the destination folder
 file_segregator.move_photos(photos_destination_folder)
-
-# Move programming documents to the destination folder
 file_segregator.move_programming_docs(programming_docs_destination_folder)
-
-# Move web documents to the destination folder
 file_segregator.move_web_docs(web_docs_destination_folder)
-
-# Move videos and songs to the destination folder
 file_segregator.move_videos_and_tracks(videos_and_tracks_destination_folder)
+
 
